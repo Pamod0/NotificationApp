@@ -1,0 +1,9 @@
+<h2>Real-Time Notifications</h2>
+<div *ngIf="notifications().length === 0">
+    <p>No new notifications.</p>
+</div>
+<ul *ngIf="notifications().length > 0">
+    <li *ngFor="let notification of notifications()">
+        {{ notification }}
+    </li>
+</ul>
