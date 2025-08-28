@@ -2,17 +2,26 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
+import { ConfigService } from './config.service';
 
 @Injectable({
     providedIn: 'root'
 })
 export class NotificationService {
+    private apiUrl!: string;
+    private hubUrl!: string;
+    private subUrl: string = 'Notification';
+
     private hubConnection!: HubConnection;
     public notifications = signal<string[]>([]);
-    private hubUrl = 'https://localhost:44354/notificationHub'; // Replace with your backend URL
-    private apiUrl = 'https://localhost:44354/api/Notification'; // Base API URL
 
+    private configService = inject(ConfigService);
     private http = inject(HttpClient);
+
+    constructor() {
+        this.apiUrl = this.configService.get('apiUrl');
+        this.hubUrl = this.configService.get('hubUrl');
+    }
 
     public startConnection = () => {
         this.hubConnection = new HubConnectionBuilder().withUrl(this.hubUrl).withAutomaticReconnect().build();
@@ -49,7 +58,7 @@ export class NotificationService {
     };
 
     public sendNotificationToAll(message: string) {
-        const url = `${this.apiUrl}/send-to-all`;
+        const url = `${this.apiUrl}/${this.subUrl}/send-to-all`;
         // The body of the request is the string message.
         return this.http.post(url, JSON.stringify(message), {
             headers: { 'Content-Type': 'application/json' }

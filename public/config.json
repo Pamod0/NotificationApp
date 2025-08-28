@@ -1,0 +1,5 @@
+{
+    "apiUrl": "https://localhost:44354/api",
+    "hubUrl": "https://localhost:44354/notificationHub",
+    "production": false
+}
