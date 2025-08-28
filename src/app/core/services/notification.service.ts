@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
-import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
+import { HttpTransportType, HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 import { ConfigService } from './config.service';
 
 @Injectable({
@@ -23,8 +23,14 @@ export class NotificationService {
         this.hubUrl = this.configService.get('hubUrl');
     }
 
+    // Forced LongPolling, skipping negotiation since Nginx issue.
     public startConnection = () => {
-        this.hubConnection = new HubConnectionBuilder().withUrl(this.hubUrl).withAutomaticReconnect().build();
+        this.hubConnection = new HubConnectionBuilder()
+            .withUrl(this.hubUrl, {
+                transport: HttpTransportType.LongPolling // 👈 Force LongPolling
+            })
+            .withAutomaticReconnect()
+            .build();
 
         this.hubConnection
             .start()
@@ -43,6 +49,29 @@ export class NotificationService {
             console.log('SignalR Reconnecting... ', err);
         });
     };
+
+    // Old function - SignalR will negotiate between WebSockets, Server-Sent Events (SSE), and Long Polling, picking the “best” one supported by client + server.
+
+    // public startConnection = () => {
+    //     this.hubConnection = new HubConnectionBuilder().withUrl(this.hubUrl).withAutomaticReconnect().build();
+
+    //     this.hubConnection
+    //         .start()
+    //         .then(() => console.log('SignalR Connection started'))
+    //         .catch((err) => console.log('Error while starting connection: ' + err));
+
+    //     this.hubConnection.onclose((err) => {
+    //         console.log('SignalR Connection closed: ', err);
+    //     });
+
+    //     this.hubConnection.onreconnected(() => {
+    //         console.log('SignalR Reconnected successfully!');
+    //     });
+
+    //     this.hubConnection.onreconnecting((err) => {
+    //         console.log('SignalR Reconnecting... ', err);
+    //     });
+    // };
 
     public listenForNotifications = () => {
         // The "ReceiveNotification" string must match the method name on your C# hub.
